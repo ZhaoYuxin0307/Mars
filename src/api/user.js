@@ -1,10 +1,13 @@
-import request from '../utils/request'
+import request from '@/utils/request'
 
-//  登录接口
-const login = (data) => {
-  return request({ url: '/sys/login', method: 'POST', data })
+// 登录
+function login(data) {
+  return request({ url: '/users/login', method: 'post', data })
 }
 
-export default {
-  login
+// 获取权限列表
+function getAuthority() {
+  return request({ url: '/users/getPermissionList', method: 'get' })
 }
+
+export { login, getAuthority }

@@ -1,191 +1,94 @@
 <template>
-  <div class="login-container">
-    <el-form ref="LoginForm" :model="loginForm" :rules="loginRules" class="login-form">
-      <div class="title-container">
-        <h3 class="title">用户登录</h3>
-        <svg-icon className="svg-language" icon="language"></svg-icon>
+  <div class="login">
+    <div class="login-form">
+      <div class="title">火星</div>
+      <div class="form-content">
+        <el-form ref="ruleFormRef" :model="ruleForm" status-icon :rules="rules">
+          <el-form-item prop="userName">
+            <el-input v-model.trim="ruleForm.userName" autocomplete="off">
+              <template #prefix>
+                <el-icon><User /></el-icon>
+              </template>
+            </el-input>
+          </el-form-item>
+          <el-form-item prop="userPwd">
+            <el-input
+              v-model.trim="ruleForm.userPwd"
+              type="password"
+              autocomplete="off"
+            >
+              <template #prefix>
+                <el-icon><View /></el-icon>
+              </template>
+            </el-input>
+          </el-form-item>
+          <el-form-item>
+            <el-button type="primary" style="width: 100%" @click="handleLogin"
+              >登录</el-button
+            >
+          </el-form-item>
+        </el-form>
       </div>
-      <el-form-item prop="username">
-        <span class="svg-container">
-          <el-icon>
-             <svg-icon icon="user"></svg-icon>
-          </el-icon>
-        </span>
-        <el-input v-model.trim="loginForm.username" />
-      </el-form-item>
-      <el-form-item prop="password">
-        <span class="svg-container">
-          <el-icon>
-             <svg-icon icon="password"></svg-icon>
-          </el-icon>
-        </span>
-        <el-input :type="inputType" v-model.trim="loginForm.password"></el-input>
-        <span class="svg-pwd" @click="handllePassWordStatus">
-          <el-icon>
-            <svg-icon :icon="passwordIconStatus"></svg-icon>
-          </el-icon>
-        </span>
-      </el-form-item>
-      <el-button  class="login-button" type="primary" @click="handleLoginSubmit">登录</el-button>
-    </el-form>
+    </div>
   </div>
 </template>
+
 <script setup>
-// import UserApi from '../../api/user'
-import util from '../../utils/utils.js'
-import { reactive, ref, computed } from 'vue'
+import { reactive, ref } from 'vue'
+import { validatePass } from './validate'
+import { View, User } from '@element-plus/icons-vue'
 import { useStore } from 'vuex'
-import { validatePassword } from './rule'
-import md5 from 'md5'
+import { useRouter } from 'vue-router'
 
 const store = useStore()
+const router = useRouter()
 
-const inputType = ref('password')
-const LoginForm = ref()
-
-const loginForm = reactive({
-  username: 'super-admin',
-  password: '123456'
+const ruleForm = reactive({
+  userName: 'admin',
+  userPwd: '123456'
 })
 
-const loginRules = reactive({
-  username: [
-    {
-      required: true,
-      trigger: 'blur',
-      message: '用户名为必填项'
-    }
-  ],
-  password: [
-    {
-      required: true,
-      trigger: 'blur',
-      validator: validatePassword
-    }
-  ]
+const rules = reactive({
+  userName: [{ required: true, message: '请输入用户名', trigger: 'blur' }],
+  userPwd: [{ required: true, validator: validatePass, trigger: 'blur' }]
 })
 
-const passwordIconStatus = computed(() => {
-  return inputType.value === 'password' ? 'eye' : 'eye-open'
-})
-
-//  登录方式
-const handleLoginSubmit = async () => {
-  if (!LoginForm.value) return
-  await LoginForm.value.validate(async (valid) => {
+/**
+ * 登录
+ */
+const ruleFormRef = ref()
+function handleLogin() {
+  ruleFormRef.value.validate(async (valid) => {
     if (valid) {
-      alert('登录')
-      const newLoginForm = util.deepCopy(loginForm)
-      newLoginForm.password = md5(newLoginForm.password)
-      // console.log("old",loginForm);
-      // console.log("new",newLoginForm);
-      // loginForm.password = md5(loginForm.password)
-
-      // const response = await UserApi.login(newLoginForm)
-      // console.log(response)
-      store.dispatch('user/login', newLoginForm)
-      // namespaced 必须加模块名
-      // namespace 不需要加模块名
+      const res = await store.dispatch('user/handleLogin', ruleForm)
+      if (res) router.push('/')
     }
   })
 }
-
-// 密码框状态切换方法
-const handllePassWordStatus = () => {
-  inputType.value = inputType.value === 'password' ? 'text' : 'password'
-}
 </script>
 
-<style scoped lang="scss">
-$bg: #2d3a4b;
-$dark_gray: #889aa4;
-$light_gray: #eee;
-$cursor: #fff;
-
-.login-container {
-  position: relative;
+<style lang="scss" scoped>
+.login {
   height: 100%;
-  background-color: $bg;
-
+  background: url('https://gimg2.baidu.com/image_search/src=http%3A%2F%2Fimg.scimall.org.cn%2Fcollect%2F2019%2F08%2F10%2F20190810120248_869ef3.jpg&refer=http%3A%2F%2Fimg.scimall.org.cn&app=2002&size=f9999,10000&q=a80&n=0&g=0n&fmt=auto?sec=1659885887&t=a94df75a756186ca00aa8abf83b64b90')
+    no-repeat;
+  background-size: 100% 100%;
+  display: flex;
+  justify-content: flex-end;
   .login-form {
-    width: 520px;
-    padding: 0 35px;
-    position: absolute;
-    left: 50%;
-    margin-left: -260px;
-    top: 160px;
-    overflow: hidden;
-
-    ::v-deep .el-form-item {
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      background: rgba(0, 0, 0, 0.1);
-      border-radius: 5px;
-      color: #454545;
-
-      .svg-container {
-        padding: 6px 5px 6px 15px;
-        color: $dark_gray;
-        vertical-align: middle;
-        display: inline-block;
-      }
-
-      .svg-pwd {
-        position: absolute;
-        right: 20px;
-        top: 10px;
-        font-size: 16px;
-        color: $dark_gray;
-        cursor: pointer;
-        user-select: none;
-      }
-    }
-
-    ::v-deep .el-input {
-      display: inline-block;
-      height: 47px;
-      width: 85%;
-      .el-input__wrapper {
-        background: transparent !important;
-        box-shadow: none;
-      }
-      .el-input__wrapper.is-focus {
-        box-shadow: none;
-      }
-      input {
-        border: 0px;
-        -webkit-appearance: none;
-        border-radius: 0px;
-        padding: 12px 5px 12px 15px;
-        color: $light_gray;
-        height: 47px;
-        caret-color: $cursor;
-      }
-    }
-
-    .title-container {
-      position: relative;
-
-      .title {
-        font-size: 26px;
-        color: $light_gray;
-        text-align: center;
-        font-weight: bold;
-        margin-bottom: 40px;
-      }
-      ::v-deep .svg-language {
-        position: absolute;
-        top: 4px;
-        right: 0;
-        background-color: #fff;
-        font-size: 22px;
-        padding: 4px;
-        border-radius: 4px;
-        cursor: pointer;
-      }
-    }
-
-    .login-button {
-      width: 100%;
+    margin: auto;
+    // margin-top: 30px;
+    // margin-right: 300px;
+    height: 230px;
+    width: 400px;
+    padding: 20px;
+    background-color: rgba($color: #000000, $alpha: 0.2);
+    border-radius: 5px;
+    box-shadow: 0 0 10px 5px rgb(199 201 203 / 30%);
+    .title {
+      font-size: 30px;
+      text-align: center;
+      color: #fff;
       margin-bottom: 30px;
     }
   }
